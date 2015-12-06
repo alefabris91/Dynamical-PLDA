@@ -1,0 +1,155 @@
+function [ logLiks_continued , identities ] = identifyLongKalman_MO_parfor( A_est,F_est,G_est,Sigma_est,mu_est,X_gal,X_gal_IDs,  X_probe,T,Dh,Dw,isIdentOS )
+%INPUTS
+%       A_est,F_est,G_est,Sigma_est,mu_est - model parameters
+%       X_gal,X_probe - gallery and probe videos
+%       I,J,T,f,Dh,Dw - hyperparameters
+%
+%OUTPUT
+%      logLiks_continued(iProb,iGal): loglikelihood of video iProb
+%            belonging to identity iGal, given gallery videos of identity iGal
+%            logLiks_continued(:,iGal+1) we have this additional column if (isIdentOS)
+%            to store the marginal likelihood of probe vids alone
+%      identitites: deriving IDENTIFICATION results
+
+
+
+    disp('________IDENTIFICATION________')
+
+    %% set up 'macro-videos' parameters
+    
+    I_prob=size(X_probe,2);
+    X_probe_detr=X_probe-repmat(mu_est,1,I_prob,T);
+    clear X_probe
+    [f,I_all_gal,T]=Utils.getSizesFrom(X_gal);
+    % X_gal=cell{numBuckets}. X_gal{j} contains videos of people for whom
+    % excatly j gallery videos are available
+    numBucketsGal=length(X_gal);
+    nonEmptyBucketsGal=[];
+    for ind=1:numBucketsGal
+        if not(isempty(X_gal{ind}))
+            nonEmptyBucketsGal=[nonEmptyBucketsGal,ind];
+        end
+    end
+
+    [A_long,C_long,Sigma_long,Gamma_long,mu_long] = Utils.stackMatrices(F_est,G_est,A_est,Sigma_est,mu_est,1,T,Dh,Dw);
+    %Set up time-varying model: A, the state matrix, changes when we have a
+    %transition from video 1 of person i to video 2 of person i
+    A_long_=zeros(Dh+Dw,Dh+Dw,2);
+    A_long_(:,:,1)=A_long;
+    A_long_(:,:,2)=[eye(Dh),zeros(Dh,Dw); zeros(Dw,Dh),zeros(Dw,Dw)];
+    maxJ=max(nonEmptyBucketsGal);
+    model=ones(1,maxJ*T);
+    for j=1:maxJ-1
+       model(j*T+1)=2; 
+    end
+    
+    %% compute conditionalLogLiks
+
+    [V,K_long] = Kalman.Offline_filter(A_long_,C_long,Gamma_long,Sigma_long, eye(Dw+Dh),maxJ*T,0,'model',model);
+    Vfilt_long_gal2=V;
+    if (isIdentOS)
+        logLiks_continued=zeros(I_prob,I_all_gal+1); %additional column for
+                                                     %marginals
+    else
+        logLiks_continued=zeros(I_prob,I_all_gal);        
+    end
+
+    for b=nonEmptyBucketsGal   %'macro-videos' of the same length, share the same final variance
+                               % -if Aij=A-, and can be filtered together
+                               % in batches. Hence, this outer loop.
+
+        fprintf('\n')
+        fprintf('\n')
+        disp (strcat('Bucket: ',num2str(b)))
+        fprintf('\n')
+        I=size(X_gal{b},2);
+        X_long_detr=zeros(f,I,b*T);
+        for j=1:b
+            for t=1:T
+                X_long_detr(:,:,(j-1)*T+t)=X_gal{b}(:,:,j,t); 
+                %Build 'macro-videos' joining vids of the same person
+                %head-to-tail
+            end
+        end
+        X_long_detr=X_long_detr-repmat(mu_est,1,I,b*T);
+
+        xfilt_long_gal=Kalman.Filter_Offline2Online_BATCH(X_long_detr,zeros(Dw+Dh,1),K_long,A_long_,C_long,'model',model);
+        init_h_4prob=xfilt_long_gal(1:Dh,:,b*T);
+        disp('Filtered long gallery')
+
+        d=diag(Sigma_long).^(-1);
+        Sigma_inv=diag(d);
+        quadTerm=C_long'*Sigma_inv*C_long;
+
+        prev_Var_=[Vfilt_long_gal2(1:Dh,1:Dh,b*T),zeros(Dh,Dw);...
+                        zeros(Dw,Dh),eye(Dw)];
+        x_filt_probe=zeros(Dh+Dw,I_prob,I);    
+        temp=zeros(I_prob,I);
+        for timeIndex=1:T;    
+            disp (strcat('Timestep: ',num2str(timeIndex),'/',num2str(T)))
+            if (timeIndex==1)
+               initial=1; 
+            else
+                initial=0;
+            end
+            [V_,K_,Sinv_,log_detS_] = Kalman.Offline_update(A_long,C_long,Gamma_long,Sigma_long,prev_Var_,quadTerm,1,'initial',initial,'chol',1);
+            prev_Var_=V_;
+            current_y=X_probe_detr(:,:,timeIndex);
+            %for iGal=1:I
+            parfor iGal=1:I 
+                if (initial)
+                    initState=[init_h_4prob(:,iGal);zeros(Dw,1)];
+                    prev_state=repmat(initState,1,I_prob);
+                else
+                    prev_state=A_long*x_filt_probe(:,:,iGal);
+                end
+                proj_err=current_y-C_long*prev_state;
+                x_filt_probe(:,:,iGal)=prev_state+K_*proj_err;
+                mahal=sum(proj_err.*(Sinv_*proj_err));
+                temp(:,iGal)=temp(:,iGal)-0.5*mahal'-(f/2)*log(2*pi)-log_detS_/2;
+
+            end
+        end
+        for iGal2=1:I
+            galTotIndex=X_gal_IDs{b}(iGal2);
+            logLiks_continued(:,galTotIndex)=temp(:,iGal2);
+        end
+    end
+    
+    %% For OS ident: loglikelihood of probe videos alone
+    if(isIdentOS)
+        prev_Var_=eye(Dh+Dw);
+
+        for timeIndex=1:T; 
+             disp (strcat('Timestep: ',num2str(timeIndex),'/',num2str(T)))
+                if (timeIndex==1)
+                   initial=1; 
+                else
+                    initial=0;
+                end
+                [V_,K_,Sinv_,log_detS_] = offline_kalman_update(A_long,C_long,Gamma_long,Sigma_long,prev_Var_,quadTerm,1,'initial',initial,'chol',1);
+                prev_Var_=V_;
+
+                if (initial)
+                    initState=zeros(Dh+Dw,1);
+                    prev_state=repmat(initState,1,I_prob);
+                else
+                    prev_state=A_long*x_filt_probe;
+                end
+                proj_err=X_probe_detr(:,:,timeIndex)-C_long*prev_state;
+                x_filt_probe=prev_state+K_*proj_err;
+                mahal=sum(proj_err.*(Sinv_*proj_err));
+                logLiks_continued(:,I_all_gal+1)=logLiks_continued(:,I_all_gal+1)-0.5*mahal'-(f/2)*log(2*pi)-log_detS_/2;        
+        end 
+    end
+
+    %%  Derive estimated identity for probeVideos
+
+    identities=zeros(1,I_prob);
+    for iProbe=1:I_prob
+        [m ,ind]=max(logLiks_continued(iProbe,:));
+        identities(iProbe)=ind;
+    end
+
+end
+
