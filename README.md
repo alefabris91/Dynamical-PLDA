@@ -14,7 +14,7 @@ DPLDA code contains the fundamental routines to run DPLDA models.
 
   Kalman.m contains routines related to Kalman filtering.
 
-  Utils.m is populated with generic utility (not particularly interesting) funcitons.
+  Utils.m is populated with generic utility (not particularly interesting) functions.
   
 PLDA code, LDA code, PCA code contain matlab code, developed by third parties.
   We reccomend downloading all of the above for two reasons:
