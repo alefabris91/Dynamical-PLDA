@@ -20,7 +20,7 @@ PLDA code, LDA code, PCA code contain matlab code, developed by third parties.
   We reccomend downloading all of the above for two reasons:
   - some functions within PLDA code can be used to initialize DPLDA models.
   - they can be used to directly compare DPLDA models's performance with
-  the one achieavable through PLDA, LDA, PCA models. 
+  the one achieavable by PLDA, LDA, PCA models. 
 
 
 
