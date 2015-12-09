@@ -40,8 +40,8 @@ Dw=Dw_(index2);
 L=L_(index3);
 [Dh,Dw,j_probe,L]
 
-[X_gal, X_probe,X_gal_IDs,X_probe_IDs]=Utils.getGalleryProbeFrom(X_train,X_train_IDs,j_probe);
-[f,~,T_train]=Utils.getSizesFrom(X_gal);
+[X_gal, X_probe,X_gal_IDs,X_probe_IDs]=Utils.get_gallery_probe_from(X_train,X_train_IDs,j_probe);
+[f,~,T_train]=Utils.get_sizes_from(X_gal);
 numBucketsTrain=length(X_gal);
 nonEmptyBucketsTrain=[];
 for ind=1:numBucketsTrain
@@ -82,7 +82,7 @@ mu_init=sum/count_tr;
 
 addpath('../../PLDA modified');
 N=T_train;
-[X_PLDA_train, identities_PLDA_train]=Utils.PreprocessData4PLDA(X_gal,X_gal_IDs,N,0);
+[X_PLDA_train, identities_PLDA_train]=Utils.preprocess_data_4PLDA(X_gal,X_gal_IDs,N,0);
 Model_PLDA=PLDA_Train(X_PLDA_train, identities_PLDA_train, L, Dh, Dw,0,0,0);
 F_init=Model_PLDA.F;
 G_init=Model_PLDA.G;
@@ -105,7 +105,7 @@ save(fileSave,'Model_PLDA');
 % plot(progress_lik);
 %% Identification of probe videos
 % real identities (ground truth) are inside X_probe_IDs
-[f,~,T_gal]=Utils.getSizesFrom(X_gal);
+[f,~,T_gal]=Utils.get_sizes_from(X_gal);
 [ conditionalLogLiks, identities ] = identification( A_est,F_est,G_est,Sigma_est,mu_est, X_gal,X_gal_IDs , X_probe,T_gal,Dh,Dw,0);
 successfulIdent=find(X_probe_IDs==identities');
 successRate(index1,index2,index3,j_probe)=length(successfulIdent)/length(identities);

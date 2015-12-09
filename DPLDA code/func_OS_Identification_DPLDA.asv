@@ -44,7 +44,7 @@ L=L_(index3);
 j_probe=j_probe_(index4);
 [Dh,Dw,j_probe,L]
 
-[X_gal, X_probe,X_gal_IDs,X_probe_IDs]=Utils.get_gallery_probe_from(X_train,X_train_IDs,j_probe,'X_ext',X_Ext,'Num_ext',numExtVids);
+[X_gal, X_probe,X_gal_IDs,X_probe_IDs]=Utils.getGalleryProbeFrom(X_train,X_train_IDs,j_probe,'X_ext',X_Ext,'Num_ext',numExtVids);
 [f,~,T_train]=Utils.get_sizes_from(X_gal);
 disp('Divided gallery and probes')
 
@@ -89,7 +89,7 @@ mu_init=Sum/count_tr;
 
 addpath('../../PLDA modified');
 N=T_train;
-[X_PLDA_train, identities_PLDA_train]=preprocess_data_4PLDA(X_gal,X_gal_IDs,N,0);
+[X_PLDA_train, identities_PLDA_train]=PreprocessData4PLDA(X_gal,X_gal_IDs,N,0);
 Model_PLDA=PLDA_Train(X_PLDA_train, identities_PLDA_train, L, Dh, Dw,0,0,0);
 F_init=Model_PLDA.F;
 G_init=Model_PLDA.G;

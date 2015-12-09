@@ -5,7 +5,7 @@ classdef Kalman
 
     methods(Static)
         
-        function [V,K,varargout] = Offline_filter(A, C, Q, R, init_V,T,computeLogDet, varargin)
+        function [V,K,varargout] = offline_filter(A, C, Q, R, init_V,T,computeLogDet, varargin)
         % INPUTS:
         % A - the system matrix
         % C - the observation matrix 
@@ -88,10 +88,10 @@ classdef Kalman
               end
               if (computeLogDet)
                     [V(:,:,t),K(:,:,t),Sinv(:,:,t),log_detS(:,t)] = ...
-                            offline_kalman_update(A(:,:,m), C, Q, R, prevV,quadTerm,computeLogDet ,'initial', initial,'chol',1);
+                            offline_update(A(:,:,m), C, Q, R, prevV,quadTerm,computeLogDet ,'initial', initial,'chol',1);
               else
                   [V(:,:,t),K(:,:,t),~,~] = ...
-                            offline_kalman_update(A(:,:,m), C, Q, R, prevV,quadTerm,computeLogDet ,'initial', initial,'chol',1);
+                            offline_update(A(:,:,m), C, Q, R, prevV,quadTerm,computeLogDet ,'initial', initial,'chol',1);
               end
               if (measureTime)
                 time(1)=time(1)+toc;
@@ -107,7 +107,7 @@ classdef Kalman
             end
         end
         
-        function [Vnew,K,Sinv,log_detS] = Offline_update(A, C, Q, R, V,quadTerm,computeLogDet ,varargin)
+        function [Vnew,K,Sinv,log_detS] = offline_update(A, C, Q, R, V,quadTerm,computeLogDet ,varargin)
         % KALMAN_UPDATE Do a one step update of the Kalman filter
         %
         % INPUTS:
@@ -349,7 +349,7 @@ classdef Kalman
         end
 
 
-        function [J,V_smooth,VV_smooth]=Offline_smoother(A,Gamma,V_filt,varargin)
+        function [J,V_smooth,VV_smooth]=offline_smoother(A,Gamma,V_filt,varargin)
 
         % INPUTS:
         % A - the system matrix
@@ -405,7 +405,7 @@ classdef Kalman
         end
 
         
-        function [xfilt] = Filter_Offline2Online_BATCH(y,x_init,K,A,C,varargin)
+        function [xfilt] = filter_offline2online_batch(y,x_init,K,A,C,varargin)
         % Once the observations data are available, performs kalman filtering based
         % on precomputed variances and gains
         %BATCH because we compute filtered states for each I in one go,
@@ -461,7 +461,7 @@ classdef Kalman
         end
         
         
-        function E_z_smooth=smoother_Offline2Online_BATCH(A,J,E_z_filt,varargin)
+        function E_z_smooth=smoother_offline2online_batch(A,J,E_z_filt,varargin)
         % Once sobservations are available, computes smoothed expected
         % values, based on filtered expected values and offline results
         % BATCH because we compute filtered states for each I in one go,
@@ -503,7 +503,7 @@ classdef Kalman
 
         end
 
-        function [loglik]=Loglik_Offline2Online_BATCH(C,A,Sinv,log_detS,initState,x_filt,y,varargin)
+        function [loglik]=loglik_offline2online_batch(C,A,Sinv,log_detS,initState,x_filt,y,varargin)
         % Once the observations data are available, computes the likelihood of the observations, based on precomputed 
         % filtered expected values and innovation covariance matrices
 

@@ -87,7 +87,7 @@ function [ A_est,F_est,G_est,Sigma_est,mu_est, progress_lik] = EM_estimate(A_ini
 
         %Set up time-varying model: A, the state matrix, changes when we have a
         %transition from video 1 of person i to video 2 of person i
-        [A_long,C_long,Sigma_long,Gamma_long,mu_long] = Utils.stack_matrices(F_est,G_est,A_est,Sigma_est,mu_est,1,T,Dh,Dw);
+        [A_long,C_long,Sigma_long,Gamma_long,mu_long] = Utils.stackMatrices(F_est,G_est,A_est,Sigma_est,mu_est,1,T,Dh,Dw);
 
         A_long_=zeros(Dh+Dw,Dh+Dw,2);
         A_long_(:,:,1)=A_long;
