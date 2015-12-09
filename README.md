@@ -10,7 +10,7 @@ DPLDA code contains the fundamental routines to run DPLDA models.
   They allow to exploit DPLDA models for applications of face identification, both closed-set and open-set.
 
   If you want to delve deeper into the model's internal functioning,
-  EM_estimateLong_OL_parfor.m and identifyLongKalman_MO_parfor.m deal with model identification and inference.
+  EM_estimate.m and identification.m deal with model identification and inference.
 
   Kalman.m contains routines related to Kalman filtering.
 
