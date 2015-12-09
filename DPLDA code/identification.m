@@ -1,4 +1,4 @@
-function [ logLiks_continued , identities ] = identifyLongKalman_MO_parfor( A_est,F_est,G_est,Sigma_est,mu_est,X_gal,X_gal_IDs,  X_probe,T,Dh,Dw,isIdentOS )
+function [ logLiks_continued , identities ] = identification( A_est,F_est,G_est,Sigma_est,mu_est,X_gal,X_gal_IDs,  X_probe,T,Dh,Dw,isIdentOS )
 %INPUTS
 %       A_est,F_est,G_est,Sigma_est,mu_est - model parameters
 %       X_gal,X_probe - gallery and probe videos

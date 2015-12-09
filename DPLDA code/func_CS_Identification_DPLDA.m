@@ -99,14 +99,14 @@ fileSave=strcat(foldSave,'Mod_50faces_noPCA_T=40_Dh=',num2str(Dh),'_Dw=',num2str
 save(fileSave,'Model_PLDA');
 
 %% EM algorithm for parameter estimate
-[ A_est,F_est,G_est,Sigma_est,mu_est, progress_lik ] = EM_estimateLong_OL_parfor(A_init, F_init, G_init, Sigma_init, mu_init,...
+[ A_est,F_est,G_est,Sigma_est,mu_est, progress_lik ] = EM_estimate(A_init, F_init, G_init, Sigma_init, mu_init,...
     X_gal,T_train,L,conv_thresh,f,Dh,Dw,0);
 
 % plot(progress_lik);
 %% Identification of probe videos
 % real identities (ground truth) are inside X_probe_IDs
 [f,~,T_gal]=Utils.getSizesFrom(X_gal);
-[ conditionalLogLiks, identities ] = identifyLongKalman_MO_parfor( A_est,F_est,G_est,Sigma_est,mu_est, X_gal,X_gal_IDs , X_probe,T_gal,Dh,Dw,0);
+[ conditionalLogLiks, identities ] = identification( A_est,F_est,G_est,Sigma_est,mu_est, X_gal,X_gal_IDs , X_probe,T_gal,Dh,Dw,0);
 successfulIdent=find(X_probe_IDs==identities');
 successRate(index1,index2,index3,j_probe)=length(successfulIdent)/length(identities);
 

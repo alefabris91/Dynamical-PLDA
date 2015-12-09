@@ -1,11 +1,11 @@
-function [ A_est,F_est,G_est,Sigma_est,mu_est, progress_lik] = EM_estimateLong_OL_parfor(A_init, F_init,G_init,Sigma_init,mu_init,...
+function [ A_est,F_est,G_est,Sigma_est,mu_est, progress_lik] = EM_estimate(A_init, F_init,G_init,Sigma_init,mu_init,...
     X_train,T,L,thresh,f,Dh,Dw,computeLogLik )
 % Estimates DPLDA model parameters and if (computeLogLik) returns the
 % value of the loglikelihood at every iteration to verify that it keeps
 % increasing. Since it's expensive to do so, once sanity checks are
 % performed, computeLogLik should be set to 0.
 
-%It's optimized (O) acording to the long (L) 'macro-video' implementation and
+%It's optimized acording to the long'macro-video' implementation and
 %thread-safe (parfor).
 
 %OUTPUT: estimated parameters and progress of loglikelihood
